@@ -11,4 +11,7 @@ repository = "https://github.com/im-0/addrsetd"
 documentation = "https://github.com/im-0/addrsetd"
 
 [dependencies]
-zicsv = { version = "*", path = "../zicsv" }
+serde_json = "*"
+structopt = "*"
+structopt-derive = "*"
+zicsv = { version = "*", path = "../zicsv", features = ["serialization"] }

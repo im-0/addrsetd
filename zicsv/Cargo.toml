@@ -9,3 +9,17 @@ categories = []
 publish = false
 repository = "https://github.com/im-0/addrsetd"
 documentation = "https://github.com/im-0/addrsetd"
+
+[features]
+default = []
+serialization = ["chrono/serde", "serde", "serde_derive", "url/serde", "url_serde"]
+
+[dependencies]
+chrono = { version = "*", default_features = false }
+csv = { version = "*", default_features = false }
+encoding = { version = "*", default_features = false }
+ipnet = { version = "*", default_features = false }
+serde = { version = "*", default_features = false, optional = true }
+serde_derive = { version = "*", default_features = false, optional = true }
+url = { version = "*", default_features = false }
+url_serde = { version = "*", default_features = false, optional = true }
