@@ -3,6 +3,10 @@
 //!
 //! Source code: <https://github.com/im-0/addrsetd>
 
+#![cfg_attr(feature = "unstable", warn(unreachable_pub))]
+#![forbid(unsafe_code)]
+#![warn(unused_results)]
+
 extern crate chrono;
 extern crate csv;
 extern crate encoding;

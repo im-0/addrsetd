@@ -1,3 +1,6 @@
+#![forbid(unsafe_code)]
+#![warn(unused_results)]
+
 extern crate failure;
 extern crate serde_json;
 

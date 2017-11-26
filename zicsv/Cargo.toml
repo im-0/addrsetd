@@ -13,6 +13,7 @@ documentation = "https://github.com/im-0/addrsetd"
 [features]
 default = []
 serialization = ["chrono/serde", "serde", "serde_derive", "url/serde", "url_serde"]
+unstable = []
 
 [dependencies]
 chrono = { version = "*", default_features = false }

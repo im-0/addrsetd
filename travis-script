@@ -1,8 +1,21 @@
 #!/bin/sh -xeu
 
+is_nightly() {
+    # Fixed version of nightly for clippy.
+    echo "${TRAVIS_RUST_VERSION}" | grep -qe "^nightly"
+}
+
 is_nightly_for_clippy() {
     # Fixed version of nightly for clippy.
     echo "${TRAVIS_RUST_VERSION}" | grep -qe "^nightly-.*"
+}
+
+workspace_members() {
+    sed -ne 's,^ *"\([^ "]*\)".*$,\1,p' <Cargo.toml
+}
+
+crate_has_unstable_feature() {
+    grep -qe "^ *unstable *= *\[ *\] *$" Cargo.toml
 }
 
 if [ "${1}" = "before_script" ]; then
@@ -13,6 +26,28 @@ elif [ "${1}" = "script" ]; then
     if is_nightly_for_clippy; then
         cargo clippy --all
     fi
+
+    for crate in $( workspace_members ); do
+        (
+            cd "${crate}"
+
+            if is_nightly; then
+                if crate_has_unstable_feature; then
+                    features="--features unstable"
+                else
+                    features=""
+                fi
+            else
+                features=""
+            fi
+
+            cargo build --verbose --all-targets $features
+            cargo test --verbose $features
+
+            cargo build --release --verbose --all-targets $features
+            cargo test --release --verbose $features
+        )
+    done
 else
     printf "Unknown command: %s\n" "${1}" >&2
     exit 1
