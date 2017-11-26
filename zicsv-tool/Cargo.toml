@@ -11,6 +11,7 @@ repository = "https://github.com/im-0/addrsetd"
 documentation = "https://github.com/im-0/addrsetd"
 
 [dependencies]
+failure = "*"
 serde_json = "*"
 structopt = "*"
 structopt-derive = "*"

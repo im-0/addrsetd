@@ -6,6 +6,10 @@
 extern crate chrono;
 extern crate csv;
 extern crate encoding;
+
+#[macro_use]
+extern crate failure;
+
 extern crate ipnet;
 
 #[cfg(feature = "serialization")]

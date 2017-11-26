@@ -18,6 +18,7 @@ serialization = ["chrono/serde", "serde", "serde_derive", "url/serde", "url_serd
 chrono = { version = "*", default_features = false }
 csv = { version = "*", default_features = false }
 encoding = { version = "*", default_features = false }
+failure = { version = "*", default_features = false, features = ["std"] }
 ipnet = { version = "*", default_features = false }
 serde = { version = "*", default_features = false, optional = true }
 serde_derive = { version = "*", default_features = false, optional = true }

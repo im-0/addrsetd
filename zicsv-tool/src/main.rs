@@ -1,3 +1,4 @@
+extern crate failure;
 extern crate serde_json;
 
 extern crate structopt;
@@ -15,16 +16,33 @@ struct Options {
     input_path: String,
 }
 
-fn main() {
+fn conv_into_json(options: &Options) -> Result<(), failure::Error> {
+    let list = zicsv::List::load_from_file(&options.input_path)?;
+    let json_str = if options.disable_pretty {
+        serde_json::to_string(&list)?
+    } else {
+        serde_json::to_string_pretty(&list)?
+    };
+    println!("{}", json_str);
+
+    Ok(())
+}
+
+fn real_main() -> Result<(), failure::Error> {
     use structopt::StructOpt;
 
     let options = Options::from_args();
+    conv_into_json(&options)
+}
 
-    let list = zicsv::List::load_from_file(options.input_path);
-    let json_str = if options.disable_pretty {
-        serde_json::to_string(&list).unwrap()
-    } else {
-        serde_json::to_string_pretty(&list).unwrap()
-    };
-    println!("{}", json_str);
+fn main() {
+    let rc = real_main().map(|_| 0).unwrap_or_else(|error| {
+        eprintln!("Error: {}", error);
+        let backtrace = format!("{}", error.backtrace());
+        if !backtrace.is_empty() {
+            eprintln!("{}", backtrace);
+        };
+        1
+    });
+    std::process::exit(rc)
 }
