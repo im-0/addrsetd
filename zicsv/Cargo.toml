@@ -1,0 +1,11 @@
+[package]
+name = "zicsv"
+description = "Parser library for Zapret-Info CSV lists"
+version = "0.0.1"
+authors = ["Ivan Mironov <mironov.ivan@gmail.com>"]
+license = "GPL-3.0"
+keywords = ["zapret-info", "parser"]
+categories = []
+publish = false
+repository = "https://github.com/im-0/addrsetd"
+documentation = "https://github.com/im-0/addrsetd"
