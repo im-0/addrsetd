@@ -28,6 +28,8 @@ pub enum Address {
     IPv4Network(ipnet::Ipv4Net),
     /// Blocked by domain name.
     DomainName(String),
+    /// Blocked by wildcard domain name.
+    WildcardDomainName(String),
     /// Blocked by URL.
     #[cfg_attr(feature = "serialization", serde(with = "url_serde"))]
     URL(url::Url),
@@ -142,7 +144,11 @@ impl List {
     fn parse_domain_name(addr_str: &str, addresses: &mut Addresses) -> Result<(), failure::Error> {
         Self::parse_for_each(addr_str, "|", |part| {
             {
-                let _ = addresses.insert(Address::DomainName(part.into()));
+                if part.starts_with('*') {
+                    let _ = addresses.insert(Address::WildcardDomainName(part.into()));
+                } else {
+                    let _ = addresses.insert(Address::DomainName(part.into()));
+                }
             }
 
             Ok(())
