@@ -18,6 +18,10 @@ crate_has_unstable_feature() {
     grep -qe "^ *unstable *= *\[ *\] *$" Cargo.toml
 }
 
+is_binary_crate() {
+    test -e src/main.rs
+}
+
 if [ "${1}" = "before_script" ]; then
     if is_nightly_for_clippy; then
         cargo install clippy --version "${CLIPPY_VERSION}" --force
@@ -32,19 +36,27 @@ elif [ "${1}" = "script" ]; then
             cd "${crate}"
 
             if is_nightly; then
+                targets="--all-targets"
+
                 if crate_has_unstable_feature; then
                     features="--features unstable"
                 else
                     features=""
                 fi
             else
+                if is_binary_crate; then
+                    targets=""
+                else
+                    targets="--all-targets"
+                fi
+
                 features=""
             fi
 
-            cargo build --verbose --all-targets $features
+            cargo build --verbose $targets $features
             cargo test --verbose $features
 
-            cargo build --release --verbose --all-targets $features
+            cargo build --release --verbose $targets $features
             cargo test --release --verbose $features
         )
     done
