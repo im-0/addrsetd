@@ -68,7 +68,7 @@ type StringRecord = (String, String, String, String, String, String);
 impl List {
     fn parse_update_datetime<Reader: std::io::BufRead>(reader: &mut Reader) -> Result<DateTime, failure::Error> {
         let mut first_line = String::new();
-        reader.read_line(&mut first_line)?;
+        let _ = reader.read_line(&mut first_line)?;
 
         let first_line = first_line.trim();
 
@@ -130,9 +130,9 @@ impl List {
 
         Self::parse_for_each(addr_str, "|", |part| {
             if part.contains('/') {
-                addresses.insert(Address::IPv4Network(ipnet::Ipv4Net::from_str(part)?));
+                let _ = addresses.insert(Address::IPv4Network(ipnet::Ipv4Net::from_str(part)?));
             } else {
-                addresses.insert(Address::IPv4(std::net::Ipv4Addr::from_str(part)?));
+                let _ = addresses.insert(Address::IPv4(std::net::Ipv4Addr::from_str(part)?));
             }
 
             Ok(())
@@ -142,7 +142,7 @@ impl List {
     fn parse_domain_name(addr_str: &str, addresses: &mut Addresses) -> Result<(), failure::Error> {
         Self::parse_for_each(addr_str, "|", |part| {
             {
-                addresses.insert(Address::DomainName(part.into()));
+                let _ = addresses.insert(Address::DomainName(part.into()));
             }
 
             Ok(())
@@ -155,7 +155,7 @@ impl List {
         // We are using " | " as a delimiter because URL itself may contain '|'.
         Self::parse_for_each(addr_str, " | ", |part| {
             {
-                addresses.insert(Address::URL(url::Url::from_str(part)?));
+                let _ = addresses.insert(Address::URL(url::Url::from_str(part)?));
             }
 
             Ok(())
