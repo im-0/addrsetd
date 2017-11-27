@@ -72,15 +72,14 @@ impl List {
         let mut first_line = String::new();
         let _ = reader.read_line(&mut first_line)?;
 
-        let first_line = first_line.trim();
-
-        let space_pos = first_line.find(' ').ok_or_else(|| {
+        let space_pos = first_line.find(':').ok_or_else(|| {
             format_err!(
-                "No ' ' in first line: \"{}\" (should be in format \"Updated: $DATE_TIME\")",
+                "No ':' in first line: \"{}\" (should be in format \"Updated: $DATE_TIME\")",
                 first_line
             )
         })?;
         let (_, updated) = first_line.split_at(space_pos + 1);
+        let updated = updated.trim();
 
         let updated = chrono::DateTime::parse_from_str(updated, "%Y-%m-%d %H:%M:%S %z")
             .map_err(|error| {
