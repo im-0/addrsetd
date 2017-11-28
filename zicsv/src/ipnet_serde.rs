@@ -1,7 +1,3 @@
-#![cfg_attr(feature = "unstable", warn(unreachable_pub))]
-#![forbid(unsafe_code)]
-#![warn(unused_results)]
-
 use ipnet;
 use serde;
 
