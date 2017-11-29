@@ -29,5 +29,8 @@ extern crate url_serde;
 #[cfg(feature = "serialization")]
 mod ipnet_serde;
 
+mod reader;
+pub use reader::*;
+
 mod types;
 pub use types::*;
