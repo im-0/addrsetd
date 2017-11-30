@@ -35,8 +35,7 @@ struct Options {
 }
 
 fn load_from_file<Path: AsRef<std::path::Path>>(path: Path) -> Result<List, failure::Error> {
-    // TODO: Simplify this.
-    let mut reader = zicsv::Reader::<std::io::BufReader<std::fs::File>>::from_file(path)?;
+    let mut reader = zicsv::Reader::from_file(path)?;
     let records: Result<Records, failure::Error> = reader.records().collect();
     Ok(List {
         updated: *reader.get_timestamp(),

@@ -59,21 +59,6 @@ where
         })
     }
 
-    /// Parse data from normal (not buffered) reader.
-    pub fn from_reader<UnbufferedReader: std::io::Read>(
-        reader: UnbufferedReader,
-    ) -> Result<Reader<std::io::BufReader<UnbufferedReader>>, failure::Error> {
-        let buf_reader = std::io::BufReader::new(reader);
-        Reader::<std::io::BufReader<UnbufferedReader>>::from_buf_reader(buf_reader)
-    }
-
-    /// Parse data from file specified by path.
-    pub fn from_file<Path: AsRef<std::path::Path>>(
-        path: Path,
-    ) -> Result<Reader<std::io::BufReader<std::fs::File>>, failure::Error> {
-        Self::from_reader(std::fs::File::open(path)?)
-    }
-
     /// Date of last update of this list.
     pub fn get_timestamp(&self) -> &types::DateTime {
         &self.updated
@@ -83,6 +68,23 @@ where
         Records {
             csv_records: self.csv_reader.byte_records(),
         }
+    }
+}
+
+impl<UnbufferedReader> Reader<std::io::BufReader<UnbufferedReader>>
+where
+    UnbufferedReader: std::io::Read,
+{
+    /// Parse data from normal (not buffered) reader.
+    pub fn from_reader(reader: UnbufferedReader) -> Result<Self, failure::Error> {
+        Self::from_buf_reader(std::io::BufReader::new(reader))
+    }
+}
+
+impl Reader<std::io::BufReader<std::fs::File>> {
+    /// Parse data from file specified by path.
+    pub fn from_file<Path: AsRef<std::path::Path>>(path: Path) -> Result<Self, failure::Error> {
+        Self::from_reader(std::fs::File::open(path)?)
     }
 }
 
