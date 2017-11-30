@@ -64,11 +64,19 @@ fn real_main() -> Result<(), failure::Error> {
 
 fn main() {
     let rc = real_main().map(|_| 0).unwrap_or_else(|error| {
-        eprintln!("Error: {}", error);
-        let backtrace = format!("{}", error.backtrace());
-        if !backtrace.is_empty() {
-            eprintln!("{}", backtrace);
-        };
+        eprintln!("Error:");
+        let mut maybe_cause = Some(error.cause());
+        while let Some(cause) = maybe_cause {
+            eprintln!("    {}", cause);
+            let _ = cause.backtrace().map(|backtrace| {
+                let backtrace = format!("{}", backtrace);
+                if !backtrace.is_empty() {
+                    eprintln!("        {}\n", backtrace);
+                };
+            });
+
+            maybe_cause = cause.cause();
+        }
         1
     });
     std::process::exit(rc)

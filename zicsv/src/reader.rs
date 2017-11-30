@@ -29,7 +29,7 @@ where
 
         let space_pos = first_line.find(':').ok_or_else(|| {
             format_err!(
-                "No ':' in first line: \"{}\" (should be in format \"Updated: $DATE_TIME\")",
+                "No ':' (should be in format \"Updated: $DATE_TIME\"): \"{}\"",
                 first_line
             )
         })?;
@@ -39,7 +39,7 @@ where
         let updated = chrono::DateTime::parse_from_str(updated, "%Y-%m-%d %H:%M:%S %z")
             .map_err(|error| {
                 format_err!(
-                    "Invalid date and time in first line: \"{}\" (\"{}\": {})",
+                    "Invalid date and time: \"{}\" (\"{}\": {})",
                     first_line,
                     updated,
                     error
@@ -51,7 +51,9 @@ where
     /// Parse data from buffered reader.
     pub fn from_buf_reader(mut reader: StreamReader) -> Result<Self, failure::Error> {
         Ok(Self {
-            updated: Self::parse_update_datetime(&mut reader)?,
+            updated: Self::parse_update_datetime(&mut reader).map_err(|error| {
+                error.context("Line 1")
+            })?,
             csv_reader: csv::Reader::from_reader(reader)
                 .delimiter(b';')
                 .has_headers(false)
@@ -67,6 +69,7 @@ where
     pub fn records(&mut self) -> Records<StreamReader> {
         Records {
             csv_records: self.csv_reader.byte_records(),
+            line_n: 1,
         }
     }
 }
@@ -82,9 +85,17 @@ where
 }
 
 impl Reader<std::io::BufReader<std::fs::File>> {
+    fn from_file_no_context<Path: AsRef<std::path::Path>>(path: Path) -> Result<Self, failure::Error> {
+        Self::from_reader(std::fs::File::open(path)?)
+    }
+
     /// Parse data from file specified by path.
     pub fn from_file<Path: AsRef<std::path::Path>>(path: Path) -> Result<Self, failure::Error> {
-        Self::from_reader(std::fs::File::open(path)?)
+        // TODO: Provide file name as context for Records::next().
+        let path_str = format!("{}", path.as_ref().to_string_lossy());
+        Self::from_file_no_context(path).map_err(|error| {
+            error.context(format!("File \"{}\"", path_str)).into()
+        })
     }
 }
 
@@ -93,6 +104,7 @@ where
     StreamReader: std::io::BufRead,
 {
     csv_records: csv::ByteRecords<'a, StreamReader>,
+    line_n: u64,
 }
 
 impl<'a, StreamReader: 'a> Records<'a, StreamReader>
@@ -207,11 +219,16 @@ where
     type Item = Result<types::Record, failure::Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        self.line_n += 1;
+
         self.csv_records.next().map(|csv_result| -> Self::Item {
             csv_result
                 .map_err(|csv_err| csv_err.into())
                 .and_then(|raw_record| Self::str_rec_from_cp1251(&raw_record))
                 .and_then(|str_record| Self::parse_record(&str_record))
+                .map_err(|error| {
+                    error.context(format!("Line {}", self.line_n)).into()
+                })
         })
     }
 }
