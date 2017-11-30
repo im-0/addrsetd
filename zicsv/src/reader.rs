@@ -215,3 +215,293 @@ where
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std;
+
+    use chrono;
+    use failure;
+
+    use types;
+
+    type Reader<'a> = super::Reader<std::io::BufReader<std::io::Cursor<&'a str>>>;
+
+    fn from_str(data: &str) -> Result<Reader, failure::Error> {
+        let stream = std::io::Cursor::new(data);
+        super::Reader::from_reader(stream)
+    }
+
+    #[test]
+    fn parse_valid_timestamp() {
+        let reader = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\
+            ",
+        ).unwrap();
+        assert_eq!(
+            *reader.get_timestamp(),
+            chrono::NaiveDate::from_ymd(2017, 11, 29).and_hms(13, 34, 56)
+        );
+
+        let reader = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;;;2017-01-02\n\
+            ",
+        ).unwrap();
+        assert_eq!(
+            *reader.get_timestamp(),
+            chrono::NaiveDate::from_ymd(2017, 11, 29).and_hms(13, 34, 56)
+        );
+    }
+
+    #[test]
+    fn parse_invalid_timestamp() {
+        let reader = from_str("");
+        assert!(reader.is_err());
+
+        // No ':'.
+        let reader = from_str(
+            "\
+            test\
+            ",
+        );
+        assert!(reader.is_err());
+
+        // Invalid date/time format.
+        let reader = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56\
+            ",
+        );
+        assert!(reader.is_err());
+    }
+
+    #[test]
+    fn parse_no_records() {
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ",
+        ).unwrap()
+            .records()
+            .next();
+        assert!(record.is_none());
+    }
+
+    #[test]
+    fn parse_valid_record() {
+        use std::iter::FromIterator;
+
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;;;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap()
+            .unwrap();
+        assert!(record.addresses.is_empty());
+        assert!(record.organization.is_empty());
+        assert!(record.order_id.is_empty());
+        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;org string;id string;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap()
+            .unwrap();
+        assert!(record.addresses.is_empty());
+        assert_eq!(record.organization, "org string");
+        assert_eq!(record.order_id, "id string");
+        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;\"org string\";id string;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap()
+            .unwrap();
+        assert!(record.addresses.is_empty());
+        assert_eq!(record.organization, "org string");
+        assert_eq!(record.order_id, "id string");
+        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;\"org;string\";id string;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap()
+            .unwrap();
+        assert!(record.addresses.is_empty());
+        assert_eq!(record.organization, "org;string");
+        assert_eq!(record.order_id, "id string");
+        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            1.2.3.4;example.com;http://example.com;;;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap()
+            .unwrap();
+        let mut addresses = vec![
+            types::Address::IPv4("1.2.3.4".parse().unwrap()),
+            types::Address::DomainName("example.com".into()),
+            types::Address::URL("http://example.com".parse().unwrap()),
+        ];
+        assert_eq!(
+            record.addresses,
+            std::collections::BTreeSet::from_iter(addresses.drain(..))
+        );
+        assert!(record.organization.is_empty());
+        assert!(record.order_id.is_empty());
+        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            1.2.3.4|1.2.3.0/24;example.com|*.example.com;http://example.com?test=x|y;;;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap()
+            .unwrap();
+        let mut addresses = vec![
+            types::Address::IPv4("1.2.3.4".parse().unwrap()),
+            types::Address::IPv4Network("1.2.3.0/24".parse().unwrap()),
+            types::Address::DomainName("example.com".into()),
+            types::Address::WildcardDomainName("*.example.com".into()),
+            types::Address::URL("http://example.com?test=x|y".parse().unwrap()),
+        ];
+        assert_eq!(
+            record.addresses,
+            std::collections::BTreeSet::from_iter(addresses.drain(..))
+        );
+        assert!(record.organization.is_empty());
+        assert!(record.order_id.is_empty());
+        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            1.2.3.4 | 1.2.3.0/24;example.com | \
+                *.example.com;http://example.com?test=x | http://example.com?test=y;;;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap()
+            .unwrap();
+        let mut addresses = vec![
+            types::Address::IPv4("1.2.3.4".parse().unwrap()),
+            types::Address::IPv4Network("1.2.3.0/24".parse().unwrap()),
+            types::Address::DomainName("example.com".into()),
+            types::Address::WildcardDomainName("*.example.com".into()),
+            types::Address::URL("http://example.com?test=x".parse().unwrap()),
+            types::Address::URL("http://example.com?test=y".parse().unwrap()),
+        ];
+        assert_eq!(
+            record.addresses,
+            std::collections::BTreeSet::from_iter(addresses.drain(..))
+        );
+        assert!(record.organization.is_empty());
+        assert!(record.order_id.is_empty());
+        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+    }
+
+    #[test]
+    fn parse_invalid_record() {
+        // Too many columns.
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;;;;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap();
+        assert!(record.is_err());
+
+        // Not enough columns.
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap();
+        assert!(record.is_err());
+
+        // No date.
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;;;\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap();
+        assert!(record.is_err());
+
+        // Invalid date format.
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;;;;test\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap();
+        assert!(record.is_err());
+
+        // Invalid IPv4 address.
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            invalid;;;;;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap();
+        assert!(record.is_err());
+
+        // Invalid URL.
+        let record = from_str(
+            "\
+            Updated: 2017-11-29 12:34:56 -0100\n\
+            ;;invalid;;;2017-01-02\n\
+            ",
+        ).unwrap()
+            .records()
+            .next()
+            .unwrap();
+        assert!(record.is_err());
+    }
+}
