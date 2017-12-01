@@ -11,6 +11,14 @@ use types;
 
 type StringRecord = (String, String, String, String, String, String);
 
+pub trait GenericReader {
+    /// Date of last update of this list.
+    fn get_timestamp(&self) -> &types::DateTime;
+
+    /// Iterate over records using generic iterator.
+    fn records_boxed<'a>(&'a mut self) -> Box<Iterator<Item = Result<types::Record, failure::Error>> + 'a>;
+}
+
 pub struct Reader<StreamReader>
 where
     StreamReader: std::io::BufRead,
@@ -61,11 +69,7 @@ where
         })
     }
 
-    /// Date of last update of this list.
-    pub fn get_timestamp(&self) -> &types::DateTime {
-        &self.updated
-    }
-
+    /// Iterate over records.
     pub fn records(&mut self) -> Records<StreamReader> {
         Records {
             csv_records: self.csv_reader.byte_records(),
@@ -96,6 +100,19 @@ impl Reader<std::io::BufReader<std::fs::File>> {
         Self::from_file_no_context(path).map_err(|error| {
             error.context(format!("File \"{}\"", path_str)).into()
         })
+    }
+}
+
+impl<StreamReader> GenericReader for Reader<StreamReader>
+    where
+        StreamReader: std::io::BufRead,
+{
+    fn get_timestamp(&self) -> &types::DateTime {
+        &self.updated
+    }
+
+    fn records_boxed<'a>(&'a mut self) -> Box<Iterator<Item = Result<types::Record, failure::Error>> + 'a> {
+        Box::new(self.records())
     }
 }
 

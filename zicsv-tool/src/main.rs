@@ -30,26 +30,35 @@ struct Options {
     #[structopt(short = "P", long = "disable-pretty", help = "Disable pretty-printing")]
     disable_pretty: bool,
 
-    #[structopt(help = "Path to input file")]
-    input_path: String,
+    #[structopt(short = "i", long = "input", help = "Read from file instead of stdin")]
+    input_path: Option<String>,
 }
 
-fn load_from_file<Path: AsRef<std::path::Path>>(path: Path) -> Result<List, failure::Error> {
-    let mut reader = zicsv::Reader::from_file(path)?;
-    let records: Result<Records, failure::Error> = reader.records().collect();
+fn create_reader(options: &Options) -> Result<Box<zicsv::GenericReader>, failure::Error> {
+    Ok(if let Some(input_path) = options.input_path.as_ref() {
+        Box::new(zicsv::Reader::from_file(input_path)?)
+    } else {
+        Box::new(zicsv::Reader::from_reader(std::io::stdin())?)
+    })
+}
+
+fn load_records(mut reader: Box<zicsv::GenericReader>) -> Result<List, failure::Error> {
+    let records: Result<Records, failure::Error> = reader.records_boxed().collect();
     Ok(List {
         updated: *reader.get_timestamp(),
         records: records?,
     })
 }
 
-fn conv_into_json(options: &Options) -> Result<(), failure::Error> {
-    let list = load_from_file(&options.input_path)?;
+fn conv_into_json(options: &Options, reader: Box<zicsv::GenericReader>) -> Result<(), failure::Error> {
+    let list = load_records(reader)?;
+
     let json_str = if options.disable_pretty {
         serde_json::to_string(&list)?
     } else {
         serde_json::to_string_pretty(&list)?
     };
+
     println!("{}", json_str);
 
     Ok(())
@@ -59,7 +68,10 @@ fn real_main() -> Result<(), failure::Error> {
     use structopt::StructOpt;
 
     let options = Options::from_args();
-    conv_into_json(&options)
+
+    let reader = create_reader(&options)?;
+
+    conv_into_json(&options, reader)
 }
 
 fn main() {
