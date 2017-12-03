@@ -208,7 +208,7 @@ where
         })
     }
 
-    fn parse_order_date(date_str: &str) -> Result<types::Date, failure::Error> {
+    fn parse_document_date(date_str: &str) -> Result<types::Date, failure::Error> {
         Ok(types::Date::parse_from_str(date_str.trim(), "%Y-%m-%d")?)
     }
 
@@ -222,8 +222,8 @@ where
         Ok(types::Record {
             addresses,
             organization: record.3.trim().into(),
-            order_id: record.4.trim().into(),
-            order_date: Self::parse_order_date(&record.5)?,
+            document_id: record.4.trim().into(),
+            document_date: Self::parse_document_date(&record.5)?,
 
             __may_be_extended: (),
         })
@@ -343,8 +343,11 @@ mod tests {
             .unwrap();
         assert!(record.addresses.is_empty());
         assert!(record.organization.is_empty());
-        assert!(record.order_id.is_empty());
-        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+        assert!(record.document_id.is_empty());
+        assert_eq!(
+            record.document_date,
+            chrono::NaiveDate::from_ymd(2017, 01, 02)
+        );
 
         let record = from_str(
             "\
@@ -358,8 +361,11 @@ mod tests {
             .unwrap();
         assert!(record.addresses.is_empty());
         assert_eq!(record.organization, "org string");
-        assert_eq!(record.order_id, "id string");
-        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+        assert_eq!(record.document_id, "id string");
+        assert_eq!(
+            record.document_date,
+            chrono::NaiveDate::from_ymd(2017, 01, 02)
+        );
 
         let record = from_str(
             "\
@@ -373,8 +379,11 @@ mod tests {
             .unwrap();
         assert!(record.addresses.is_empty());
         assert_eq!(record.organization, "org string");
-        assert_eq!(record.order_id, "id string");
-        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+        assert_eq!(record.document_id, "id string");
+        assert_eq!(
+            record.document_date,
+            chrono::NaiveDate::from_ymd(2017, 01, 02)
+        );
 
         let record = from_str(
             "\
@@ -388,8 +397,11 @@ mod tests {
             .unwrap();
         assert!(record.addresses.is_empty());
         assert_eq!(record.organization, "org;string");
-        assert_eq!(record.order_id, "id string");
-        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+        assert_eq!(record.document_id, "id string");
+        assert_eq!(
+            record.document_date,
+            chrono::NaiveDate::from_ymd(2017, 01, 02)
+        );
 
         let record = from_str(
             "\
@@ -411,8 +423,11 @@ mod tests {
             std::collections::BTreeSet::from_iter(addresses.drain(..))
         );
         assert!(record.organization.is_empty());
-        assert!(record.order_id.is_empty());
-        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+        assert!(record.document_id.is_empty());
+        assert_eq!(
+            record.document_date,
+            chrono::NaiveDate::from_ymd(2017, 01, 02)
+        );
 
         let record = from_str(
             "\
@@ -436,8 +451,11 @@ mod tests {
             std::collections::BTreeSet::from_iter(addresses.drain(..))
         );
         assert!(record.organization.is_empty());
-        assert!(record.order_id.is_empty());
-        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+        assert!(record.document_id.is_empty());
+        assert_eq!(
+            record.document_date,
+            chrono::NaiveDate::from_ymd(2017, 01, 02)
+        );
 
         let record = from_str(
             "\
@@ -463,8 +481,11 @@ mod tests {
             std::collections::BTreeSet::from_iter(addresses.drain(..))
         );
         assert!(record.organization.is_empty());
-        assert!(record.order_id.is_empty());
-        assert_eq!(record.order_date, chrono::NaiveDate::from_ymd(2017, 01, 02));
+        assert!(record.document_id.is_empty());
+        assert_eq!(
+            record.document_date,
+            chrono::NaiveDate::from_ymd(2017, 01, 02)
+        );
     }
 
     #[test]

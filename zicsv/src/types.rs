@@ -43,10 +43,10 @@ pub struct Record {
     pub addresses: Addresses,
     /// Name of organization that requested blocking.
     pub organization: String,
-    /// ID of official order.
-    pub order_id: String,
-    /// Date of official order.
-    pub order_date: Date,
+    /// ID of official document.
+    pub document_id: String,
+    /// Date of official document.
+    pub document_date: Date,
 
     #[doc(hidden)]
     /// This struct may be extended in future.
