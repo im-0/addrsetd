@@ -1,0 +1,16 @@
+[package]
+name = "addrsetd"
+description = "Daemon for managing sets of network addresses"
+version = "0.0.1"
+authors = ["Ivan Mironov <mironov.ivan@gmail.com>"]
+license = "GPL-3.0"
+keywords = ["daemon", "network"]
+categories = []
+publish = false
+repository = "https://github.com/im-0/addrsetd"
+documentation = "https://github.com/im-0/addrsetd"
+
+[dependencies]
+failure = "*"
+structopt = "*"
+structopt-derive = "*"
