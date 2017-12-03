@@ -6,7 +6,7 @@ rust:
   - nightly
 
   # For clippy.
-  - nightly-2017-12-01
+  - nightly-2017-12-02
 
 env:
   global:
