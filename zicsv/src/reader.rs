@@ -104,8 +104,8 @@ impl Reader<std::io::BufReader<std::fs::File>> {
 }
 
 impl<StreamReader> GenericReader for Reader<StreamReader>
-    where
-        StreamReader: std::io::BufRead,
+where
+    StreamReader: std::io::BufRead,
 {
     fn get_timestamp(&self) -> &types::DateTime {
         &self.updated

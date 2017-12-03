@@ -92,7 +92,9 @@ fn real_main() -> Result<(), failure::Error> {
     let reader = create_reader(&options)?;
 
     match options.command {
-         Command::IntoJson {disable_pretty, ..} => conv_into_json(reader, disable_pretty),
+        Command::IntoJson {
+            disable_pretty, ..
+        } => conv_into_json(reader, disable_pretty),
     }
 }
 
