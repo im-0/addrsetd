@@ -12,5 +12,12 @@ documentation = "https://github.com/im-0/addrsetd"
 
 [dependencies]
 failure = "*"
+isatty = "*"
+log4rs = "*"
 structopt = "*"
 structopt-derive = "*"
+
+[dependencies.log]
+version = "*"
+default_features = false
+features = ["release_max_level_debug"]
