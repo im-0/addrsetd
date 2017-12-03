@@ -175,8 +175,7 @@ fn real_main() -> Result<(), failure::Error> {
 fn main() {
     let rc = real_main().map(|_| 0).unwrap_or_else(|error| {
         eprintln!("Error:");
-        let mut maybe_cause = Some(error.cause());
-        while let Some(cause) = maybe_cause {
+        for cause in error.causes() {
             eprintln!("    {}", cause);
             let _ = cause.backtrace().map(|backtrace| {
                 let backtrace = format!("{}", backtrace);
@@ -184,8 +183,6 @@ fn main() {
                     eprintln!("        {}\n", backtrace);
                 };
             });
-
-            maybe_cause = cause.cause();
         }
         1
     });
