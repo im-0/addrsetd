@@ -12,6 +12,7 @@
 #![cfg_attr(feature = "cargo-clippy", warn(use_self))]
 #![cfg_attr(feature = "cargo-clippy", warn(used_underscore_binding))]
 
+#[macro_use]
 extern crate failure;
 
 #[macro_use]
@@ -36,12 +37,38 @@ pub struct List {
     pub records: Records,
 }
 
+struct SelectOptions {
+    ipv4: bool,
+    ipv4_network: bool,
+    domain: bool,
+    wildcard_domain: bool,
+    url: bool,
+}
+
 #[derive(StructOpt, Debug)]
 enum Command {
-    #[structopt(name = "into-json", help = "Convert into json format")]
+    #[structopt(name = "into-json", about = "Convert into json format")]
     IntoJson {
         #[structopt(short = "P", long = "disable-pretty", help = "Disable pretty-printing")]
         disable_pretty: bool,
+    },
+
+    #[structopt(name = "select", about = "Print selected types of blocked addresses into stdout")]
+    Select {
+        #[structopt(short = "4", long = "ipv4", help = "IPv4 addresses")]
+        ipv4: bool,
+
+        #[structopt(short = "n", long = "ipv4-network", help = "IPv4 networks")]
+        ipv4_network: bool,
+
+        #[structopt(short = "d", long = "domain", help = "Domain names")]
+        domain: bool,
+
+        #[structopt(short = "w", long = "wildcard-domain", help = "Wildcard domain names")]
+        wildcard_domain: bool,
+
+        #[structopt(short = "u", long = "url", help = "URLs")]
+        url: bool,
     },
 }
 
@@ -84,6 +111,33 @@ fn conv_into_json(reader: Box<zicsv::GenericReader>, disable_pretty: bool) -> Re
     Ok(())
 }
 
+fn select(options: &SelectOptions, mut reader: Box<zicsv::GenericReader>) -> Result<(), failure::Error> {
+    for record in reader.records_boxed() {
+        let record = record?;
+
+        for address in &record.addresses {
+            let selected = match address {
+                &zicsv::Address::IPv4(_) => options.ipv4,
+                &zicsv::Address::IPv4Network(_) => options.ipv4_network,
+                &zicsv::Address::DomainName(_) => options.domain,
+                &zicsv::Address::WildcardDomainName(_) => options.wildcard_domain,
+                &zicsv::Address::URL(_) => options.url,
+
+                unknown => {
+                    eprintln!("Warning! Unknwon address type: \"{:?}\"", unknown);
+                    false
+                },
+            };
+
+            if selected {
+                println!("{}", address);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn real_main() -> Result<(), failure::Error> {
     use structopt::StructOpt;
 
@@ -95,6 +149,28 @@ fn real_main() -> Result<(), failure::Error> {
         Command::IntoJson {
             disable_pretty, ..
         } => conv_into_json(reader, disable_pretty),
+
+        Command::Select {
+            ipv4,
+            ipv4_network,
+            domain,
+            wildcard_domain,
+            url,
+        } => {
+            let sopts = SelectOptions {
+                ipv4,
+                ipv4_network,
+                domain,
+                wildcard_domain,
+                url,
+            };
+            ensure!(
+                sopts.ipv4 || sopts.ipv4_network || sopts.domain || sopts.wildcard_domain || sopts.url,
+                "At least one selection should be specified"
+            );
+
+            select(&sopts, reader)
+        },
     }
 }
 
