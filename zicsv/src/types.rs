@@ -71,3 +71,9 @@ impl<'a> From<&'a Address> for String {
         }
     }
 }
+
+impl std::fmt::Display for Address {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(formatter, "{}", String::from(self))
+    }
+}
