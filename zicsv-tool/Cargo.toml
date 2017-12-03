@@ -11,10 +11,10 @@ repository = "https://github.com/im-0/addrsetd"
 documentation = "https://github.com/im-0/addrsetd"
 
 [dependencies]
-failure = "*"
-serde = "*"
-serde_derive = "*"
-serde_json = "*"
-structopt = "*"
-structopt-derive = "*"
+failure = { version = "*", default_features = false, features = ["std"] }
+serde = { version = "*", default_features = false }
+serde_derive = { version = "*", default_features = false }
+serde_json = { version = "*", default_features = false }
+structopt = { version = "*", default_features = false }
+structopt-derive = { version = "*", default_features = false }
 zicsv = { version = "*", path = "../zicsv", features = ["serialization"] }

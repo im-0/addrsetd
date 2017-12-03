@@ -11,11 +11,11 @@ repository = "https://github.com/im-0/addrsetd"
 documentation = "https://github.com/im-0/addrsetd"
 
 [dependencies]
-failure = "*"
-isatty = "*"
-log4rs = "*"
-structopt = "*"
-structopt-derive = "*"
+failure = { version = "*", default_features = false, features = ["std"] }
+isatty = { version = "*", default_features = false }
+log4rs = { version = "*", default_features = false, features = ["all_components"] }
+structopt = { version = "*", default_features = false }
+structopt-derive = { version = "*", default_features = false }
 
 [dependencies.log]
 version = "*"
