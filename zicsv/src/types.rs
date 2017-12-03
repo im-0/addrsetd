@@ -29,7 +29,7 @@ pub enum Address {
 
     #[doc(hidden)]
     /// This enum may be extended in future, use catch-all `_` arm to match future variants.
-    __Nonexhaustive,
+    __NonExhaustive,
 }
 
 pub type Addresses = std::collections::BTreeSet<Address>;
@@ -54,3 +54,20 @@ pub struct Record {
 }
 
 pub type DateTime = chrono::NaiveDateTime;
+
+impl<'a> From<&'a Address> for String {
+    fn from(address: &Address) -> Self {
+        #[allow(non_snake_case)]
+        match address {
+            &Address::IPv4(value) => format!("{}", value),
+            &Address::IPv4Network(value) => format!("{}/{}", value.addr(), value.prefix_len()),
+
+            &Address::DomainName(ref value) |
+            &Address::WildcardDomainName(ref value) => value.clone(),
+
+            &Address::URL(ref value) => value.as_str().into(),
+
+            __NonExhaustive => unreachable!(),
+        }
+    }
+}
