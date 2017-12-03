@@ -225,6 +225,8 @@ where
             organization: record.3.trim().into(),
             order_id: record.4.trim().into(),
             order_date: Self::parse_order_date(&record.5)?,
+
+            __may_be_extended: (),
         })
     }
 }

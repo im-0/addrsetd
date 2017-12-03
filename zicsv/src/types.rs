@@ -26,6 +26,10 @@ pub enum Address {
     /// Blocked by URL.
     #[cfg_attr(feature = "serialization", serde(with = "url_serde"))]
     URL(url::Url),
+
+    #[doc(hidden)]
+    /// This enum may be extended in future, use catch-all `_` arm to match future variants.
+    __Nonexhaustive,
 }
 
 pub type Addresses = std::collections::BTreeSet<Address>;
@@ -43,6 +47,10 @@ pub struct Record {
     pub order_id: String,
     /// Date of official order.
     pub order_date: Date,
+
+    #[doc(hidden)]
+    /// This struct may be extended in future.
+    pub(crate) __may_be_extended: (),
 }
 
 pub type DateTime = chrono::NaiveDateTime;
