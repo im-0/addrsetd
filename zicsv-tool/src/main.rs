@@ -30,11 +30,9 @@ extern crate zicsv;
 type Records = std::collections::LinkedList<zicsv::Record>;
 
 #[derive(Serialize)]
-pub struct List {
-    /// Date of last update of this list.
-    pub updated: zicsv::DateTime,
-    /// List of records.
-    pub records: Records,
+struct List {
+    updated: zicsv::DateTime,
+    records: Records,
 }
 
 struct SelectOptions {
