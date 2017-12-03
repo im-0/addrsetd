@@ -66,7 +66,7 @@ elif [ "${1}" = "script" ]; then
 
     curl $CURL_OPTS --output "./dump.csv" "${ZI_DUMP_CSV}"
     for build_type in "debug" "release"; do
-        "./target/${build_type}/zicsv-tool" --disable-pretty --input "./dump.csv" >/dev/null
+        "./target/${build_type}/zicsv-tool" --input "./dump.csv" into-json --disable-pretty >/dev/null
     done
 else
     printf "Unknown command: %s\n" "${1}" >&2

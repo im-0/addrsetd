@@ -37,12 +37,21 @@ pub struct List {
 }
 
 #[derive(StructOpt, Debug)]
-struct Options {
-    #[structopt(short = "P", long = "disable-pretty", help = "Disable pretty-printing")]
-    disable_pretty: bool,
+enum Command {
+    #[structopt(name = "into-json", help = "Convert into json format")]
+    IntoJson {
+        #[structopt(short = "P", long = "disable-pretty", help = "Disable pretty-printing")]
+        disable_pretty: bool,
+    },
+}
 
+#[derive(StructOpt, Debug)]
+struct Options {
     #[structopt(short = "i", long = "input", help = "Read from file instead of stdin")]
     input_path: Option<String>,
+
+    #[structopt(subcommand)]
+    command: Command,
 }
 
 fn create_reader(options: &Options) -> Result<Box<zicsv::GenericReader>, failure::Error> {
@@ -61,10 +70,10 @@ fn load_records(mut reader: Box<zicsv::GenericReader>) -> Result<List, failure::
     })
 }
 
-fn conv_into_json(options: &Options, reader: Box<zicsv::GenericReader>) -> Result<(), failure::Error> {
+fn conv_into_json(reader: Box<zicsv::GenericReader>, disable_pretty: bool) -> Result<(), failure::Error> {
     let list = load_records(reader)?;
 
-    let json_str = if options.disable_pretty {
+    let json_str = if disable_pretty {
         serde_json::to_string(&list)?
     } else {
         serde_json::to_string_pretty(&list)?
@@ -82,7 +91,9 @@ fn real_main() -> Result<(), failure::Error> {
 
     let reader = create_reader(&options)?;
 
-    conv_into_json(&options, reader)
+    match options.command {
+         Command::IntoJson {disable_pretty, ..} => conv_into_json(reader, disable_pretty),
+    }
 }
 
 fn main() {
