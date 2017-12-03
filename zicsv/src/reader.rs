@@ -270,6 +270,8 @@ mod tests {
 
     #[test]
     fn parse_valid_timestamp() {
+        use reader::GenericReader;
+
         let reader = from_str(
             "\
             Updated: 2017-11-29 12:34:56 -0100\
