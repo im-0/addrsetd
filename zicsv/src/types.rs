@@ -50,6 +50,7 @@ pub struct Record {
 
     #[doc(hidden)]
     /// This struct may be extended in future.
+    #[cfg_attr(feature = "serialization", serde(skip_serializing))]
     pub(crate) __may_be_extended: (),
 }
 
