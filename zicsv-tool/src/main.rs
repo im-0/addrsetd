@@ -68,6 +68,9 @@ enum Command {
         #[structopt(short = "u", long = "url", help = "URLs")]
         url: bool,
     },
+
+    #[structopt(name = "updated", about = "Print date of last update")]
+    Updated,
 }
 
 #[derive(StructOpt, Debug)]
@@ -169,6 +172,8 @@ fn real_main() -> Result<(), failure::Error> {
 
             select(&sopts, reader)
         },
+
+        Command::Updated => Ok(println!("{}", reader.get_timestamp())),
     }
 }
 
