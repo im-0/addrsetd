@@ -137,12 +137,11 @@ where
     }
 
     fn str_rec_from_cp1251(raw_vec: &[Vec<u8>]) -> Result<StringRecord, failure::Error> {
-        if raw_vec.len() != 6 {
-            return Err(format_err!(
-                "Invalid number of fields: {} != 6",
-                raw_vec.len(),
-            ));
-        }
+        ensure!(
+            raw_vec.len() == 6,
+            "Invalid number of fields: {} != 6",
+            raw_vec.len()
+        );
 
         Ok((
             Self::str_from_cp1251(&raw_vec[0])?,
