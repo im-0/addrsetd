@@ -14,6 +14,7 @@
 #![cfg_attr(feature = "cargo-clippy", warn(print_stdout))]
 
 extern crate failure;
+extern crate futures;
 extern crate isatty;
 
 #[macro_use]
@@ -23,6 +24,9 @@ extern crate log4rs;
 extern crate structopt;
 #[macro_use]
 extern crate structopt_derive;
+
+extern crate tokio_core;
+extern crate tokio_signal;
 
 #[derive(StructOpt, Debug)]
 struct Options {}
@@ -54,7 +58,32 @@ fn init_basic_logger() -> Result<log4rs::Handle, failure::Error> {
     log4rs::init_config(config).map_err(|error| error.into())
 }
 
+fn watch_signals(handle: &tokio_core::reactor::Handle) -> Box<futures::Stream<Item = (), Error = failure::Error>> {
+    use self::futures::Future;
+    use self::futures::Stream;
+
+    let sigint = tokio_signal::unix::Signal::new(tokio_signal::unix::SIGINT, handle)
+        .flatten_stream()
+        .take(1);
+    let sigterm = tokio_signal::unix::Signal::new(tokio_signal::unix::SIGTERM, handle)
+        .flatten_stream()
+        .take(1);
+
+    let signals = sigint.select(sigterm).take(1);
+
+    Box::new(signals.from_err().filter_map(|signal| {
+        let sig_name = match signal {
+            tokio_signal::unix::SIGINT => "SIGINT",
+            tokio_signal::unix::SIGTERM => "SIGTERM",
+            _ => unreachable!("Unexpected signal: {}", signal),
+        };
+        info!("{} received, terminating...", sig_name);
+        None
+    }))
+}
+
 fn real_main() -> Result<(), failure::Error> {
+    use futures::Stream;
     use structopt::StructOpt;
 
     let _ = init_basic_logger().expect("Unable to initialize basic logger (stderr)");
@@ -66,6 +95,11 @@ fn real_main() -> Result<(), failure::Error> {
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION")
     );
+
+    let mut core = tokio_core::reactor::Core::new()?;
+    let handle = core.handle();
+    let signals = watch_signals(&handle);
+    core.run(signals.for_each(|_| Ok(())))?;
 
     Ok(())
 }
