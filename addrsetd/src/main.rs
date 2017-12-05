@@ -58,32 +58,34 @@ fn init_basic_logger() -> Result<log4rs::Handle, failure::Error> {
     log4rs::init_config(config).map_err(|error| error.into())
 }
 
-fn watch_signals(handle: &tokio_core::reactor::Handle) -> Box<futures::Stream<Item = (), Error = failure::Error>> {
+fn watch_signals(handle: &tokio_core::reactor::Handle) -> Box<futures::Future<Item = (), Error = failure::Error>> {
     use self::futures::Future;
     use self::futures::Stream;
 
-    let sigint = tokio_signal::unix::Signal::new(tokio_signal::unix::SIGINT, handle)
-        .flatten_stream()
-        .take(1);
-    let sigterm = tokio_signal::unix::Signal::new(tokio_signal::unix::SIGTERM, handle)
-        .flatten_stream()
-        .take(1);
+    let sigint = tokio_signal::unix::Signal::new(tokio_signal::unix::SIGINT, handle).flatten_stream();
+    let sigterm = tokio_signal::unix::Signal::new(tokio_signal::unix::SIGTERM, handle).flatten_stream();
 
-    let signals = sigint.select(sigterm).take(1);
+    let signals = sigint.select(sigterm);
 
-    Box::new(signals.from_err().filter_map(|signal| {
-        let sig_name = match signal {
-            tokio_signal::unix::SIGINT => "SIGINT",
-            tokio_signal::unix::SIGTERM => "SIGTERM",
-            _ => unreachable!("Unexpected signal: {}", signal),
-        };
-        info!("{} received, terminating...", sig_name);
-        None
-    }))
+    Box::new(
+        signals
+            .from_err()
+            .take_while(|signal| {
+                let sig_name = match *signal {
+                    tokio_signal::unix::SIGINT => "SIGINT",
+                    tokio_signal::unix::SIGTERM => "SIGTERM",
+                    _ => unreachable!("Unexpected signal: {}", signal),
+                };
+                info!("{} received, terminating...", sig_name);
+
+                // Later we may decide to handle other signals, like SIGHUP for re-reading configuration.
+                Ok(false)
+            })
+            .for_each(|_| Ok(())),
+    )
 }
 
 fn real_main() -> Result<(), failure::Error> {
-    use futures::Stream;
     use structopt::StructOpt;
 
     let _ = init_basic_logger().expect("Unable to initialize basic logger (stderr)");
@@ -99,7 +101,7 @@ fn real_main() -> Result<(), failure::Error> {
     let mut core = tokio_core::reactor::Core::new()?;
     let handle = core.handle();
     let signals = watch_signals(&handle);
-    core.run(signals.for_each(|_| Ok(())))?;
+    core.run(signals)?;
 
     Ok(())
 }
