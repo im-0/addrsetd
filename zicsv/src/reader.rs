@@ -416,10 +416,7 @@ mod tests {
             types::Address::DomainName("example.com".into()),
             types::Address::URL("http://example.com".parse().unwrap()),
         ];
-        assert_eq!(
-            record.addresses,
-            addresses,
-        );
+        assert_eq!(record.addresses, addresses);
         assert!(record.organization.is_empty());
         assert!(record.document_id.is_empty());
         assert_eq!(
@@ -444,10 +441,7 @@ mod tests {
             types::Address::WildcardDomainName("*.example.com".into()),
             types::Address::URL("http://example.com?test=x|y".parse().unwrap()),
         ];
-        assert_eq!(
-            record.addresses,
-            addresses,
-        );
+        assert_eq!(record.addresses, addresses);
         assert!(record.organization.is_empty());
         assert!(record.document_id.is_empty());
         assert_eq!(
@@ -474,10 +468,7 @@ mod tests {
             types::Address::URL("http://example.com?test=x".parse().unwrap()),
             types::Address::URL("http://example.com?test=y".parse().unwrap()),
         ];
-        assert_eq!(
-            record.addresses,
-            addresses,
-        );
+        assert_eq!(record.addresses, addresses);
         assert!(record.organization.is_empty());
         assert!(record.document_id.is_empty());
         assert_eq!(
