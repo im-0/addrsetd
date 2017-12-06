@@ -32,7 +32,7 @@ pub enum Address {
     __NonExhaustive,
 }
 
-pub type Addresses = std::collections::BTreeSet<Address>;
+pub type Addresses = Vec<Address>;
 pub type Date = chrono::NaiveDate;
 
 /// One record from CSV.

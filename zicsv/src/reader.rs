@@ -172,9 +172,9 @@ where
 
         Self::parse_for_each(addr_str, "|", |part| {
             if part.contains('/') {
-                let _ = addresses.insert(types::Address::IPv4Network(ipnet::Ipv4Net::from_str(part)?));
+                addresses.push(types::Address::IPv4Network(ipnet::Ipv4Net::from_str(part)?));
             } else {
-                let _ = addresses.insert(types::Address::IPv4(std::net::Ipv4Addr::from_str(part)?));
+                addresses.push(types::Address::IPv4(std::net::Ipv4Addr::from_str(part)?));
             }
 
             Ok(())
@@ -185,9 +185,9 @@ where
         Self::parse_for_each(addr_str, "|", |part| {
             {
                 if part.starts_with('*') {
-                    let _ = addresses.insert(types::Address::WildcardDomainName(part.into()));
+                    addresses.push(types::Address::WildcardDomainName(part.into()));
                 } else {
-                    let _ = addresses.insert(types::Address::DomainName(part.into()));
+                    addresses.push(types::Address::DomainName(part.into()));
                 }
             }
 
@@ -201,7 +201,7 @@ where
         // We are using " | " as a delimiter because URL itself may contain '|'.
         Self::parse_for_each(addr_str, " | ", |part| {
             {
-                let _ = addresses.insert(types::Address::URL(url::Url::from_str(part)?));
+                addresses.push(types::Address::URL(url::Url::from_str(part)?));
             }
 
             Ok(())
@@ -329,8 +329,6 @@ mod tests {
 
     #[test]
     fn parse_valid_record() {
-        use std::iter::FromIterator;
-
         let record = from_str(
             "\
             Updated: 2017-11-29 12:34:56 -0100\n\
@@ -413,14 +411,14 @@ mod tests {
             .next()
             .unwrap()
             .unwrap();
-        let mut addresses = vec![
+        let addresses = vec![
             types::Address::IPv4("1.2.3.4".parse().unwrap()),
             types::Address::DomainName("example.com".into()),
             types::Address::URL("http://example.com".parse().unwrap()),
         ];
         assert_eq!(
             record.addresses,
-            std::collections::BTreeSet::from_iter(addresses.drain(..))
+            addresses,
         );
         assert!(record.organization.is_empty());
         assert!(record.document_id.is_empty());
@@ -439,7 +437,7 @@ mod tests {
             .next()
             .unwrap()
             .unwrap();
-        let mut addresses = vec![
+        let addresses = vec![
             types::Address::IPv4("1.2.3.4".parse().unwrap()),
             types::Address::IPv4Network("1.2.3.0/24".parse().unwrap()),
             types::Address::DomainName("example.com".into()),
@@ -448,7 +446,7 @@ mod tests {
         ];
         assert_eq!(
             record.addresses,
-            std::collections::BTreeSet::from_iter(addresses.drain(..))
+            addresses,
         );
         assert!(record.organization.is_empty());
         assert!(record.document_id.is_empty());
@@ -468,7 +466,7 @@ mod tests {
             .next()
             .unwrap()
             .unwrap();
-        let mut addresses = vec![
+        let addresses = vec![
             types::Address::IPv4("1.2.3.4".parse().unwrap()),
             types::Address::IPv4Network("1.2.3.0/24".parse().unwrap()),
             types::Address::DomainName("example.com".into()),
@@ -478,7 +476,7 @@ mod tests {
         ];
         assert_eq!(
             record.addresses,
-            std::collections::BTreeSet::from_iter(addresses.drain(..))
+            addresses,
         );
         assert!(record.organization.is_empty());
         assert!(record.document_id.is_empty());
