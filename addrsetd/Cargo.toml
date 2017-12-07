@@ -15,6 +15,7 @@ failure = { version = "*", default_features = false, features = ["std"] }
 futures = { version = "*", default_features = false }
 isatty = { version = "*", default_features = false }
 log4rs = { version = "*", default_features = false, features = ["all_components"] }
+log-panics = { version = "*", default_features = false, features = ["with-backtrace"] }
 structopt = { version = "*", default_features = false }
 structopt-derive = { version = "*", default_features = false }
 tokio-core = { version = "*", default_features = false }

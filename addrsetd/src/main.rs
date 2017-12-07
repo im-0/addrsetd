@@ -20,6 +20,7 @@ extern crate isatty;
 #[macro_use]
 extern crate log;
 extern crate log4rs;
+extern crate log_panics;
 
 extern crate structopt;
 #[macro_use]
@@ -89,6 +90,7 @@ fn real_main() -> Result<(), failure::Error> {
     use structopt::StructOpt;
 
     let _ = init_basic_logger().expect("Unable to initialize basic logger (stderr)");
+    log_panics::init();
 
     let _ = Options::from_args();
 
