@@ -25,3 +25,6 @@ serde = { version = "*", default_features = false, optional = true }
 serde_derive = { version = "*", default_features = false, optional = true }
 url = { version = "*", default_features = false }
 url_serde = { version = "*", default_features = false, optional = true }
+
+[dev-dependencies]
+pretty_assertions = { version = "*", default_features = false }
