@@ -63,8 +63,7 @@ impl<'a> From<&'a Address> for String {
             &Address::IPv4(value) => format!("{}", value),
             &Address::IPv4Network(value) => format!("{}/{}", value.addr(), value.prefix_len()),
 
-            &Address::DomainName(ref value) |
-            &Address::WildcardDomainName(ref value) => value.clone(),
+            &Address::DomainName(ref value) | &Address::WildcardDomainName(ref value) => value.clone(),
 
             &Address::URL(ref value) => value.as_str().into(),
 

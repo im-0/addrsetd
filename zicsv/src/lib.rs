@@ -1,12 +1,11 @@
 //! Parser library for Zapret-Info CSV lists.
 //! Supports dumps from <https://github.com/zapret-info/z-i> and its mirrors.
-//!
+//! 
 //! Source code: <https://github.com/im-0/addrsetd>
 
 #![cfg_attr(feature = "unstable", warn(unreachable_pub))]
 #![forbid(unsafe_code)]
 #![warn(unused_results)]
-
 #![cfg_attr(feature = "cargo-clippy", warn(filter_map))]
 #![cfg_attr(feature = "cargo-clippy", warn(if_not_else))]
 #![cfg_attr(feature = "cargo-clippy", warn(mut_mut))]
@@ -33,10 +32,10 @@ extern crate ipnet;
 extern crate pretty_assertions;
 
 #[cfg(feature = "serialization")]
+extern crate serde;
+#[cfg(feature = "serialization")]
 #[macro_use]
 extern crate serde_derive;
-#[cfg(feature = "serialization")]
-extern crate serde;
 
 extern crate url;
 #[cfg(feature = "serialization")]

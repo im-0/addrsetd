@@ -44,24 +44,21 @@ where
         let (_, updated) = first_line.split_at(space_pos + 1);
         let updated = updated.trim();
 
-        let updated = chrono::DateTime::parse_from_str(updated, "%Y-%m-%d %H:%M:%S %z")
-            .map_err(|error| {
-                format_err!(
-                    "Invalid date and time: \"{}\" (\"{}\": {})",
-                    first_line,
-                    updated,
-                    error
-                )
-            })?;
+        let updated = chrono::DateTime::parse_from_str(updated, "%Y-%m-%d %H:%M:%S %z").map_err(|error| {
+            format_err!(
+                "Invalid date and time: \"{}\" (\"{}\": {})",
+                first_line,
+                updated,
+                error
+            )
+        })?;
         Ok(updated.naive_utc())
     }
 
     /// Parse data from buffered reader.
     pub fn from_buf_reader(mut reader: StreamReader) -> Result<Self, failure::Error> {
         Ok(Self {
-            updated: Self::parse_update_datetime(&mut reader).map_err(|error| {
-                error.context("Line 1")
-            })?,
+            updated: Self::parse_update_datetime(&mut reader).map_err(|error| error.context("Line 1"))?,
             csv_reader: csv::Reader::from_reader(reader)
                 .delimiter(b';')
                 .has_headers(false)
@@ -97,9 +94,7 @@ impl Reader<std::io::BufReader<std::fs::File>> {
     pub fn from_file<Path: AsRef<std::path::Path>>(path: Path) -> Result<Self, failure::Error> {
         // TODO: Provide file name as context for Records::next().
         let path_str = format!("{}", path.as_ref().to_string_lossy());
-        Self::from_file_no_context(path).map_err(|error| {
-            error.context(format!("File \"{}\"", path_str)).into()
-        })
+        Self::from_file_no_context(path).map_err(|error| error.context(format!("File \"{}\"", path_str)).into())
     }
 }
 
@@ -244,9 +239,7 @@ where
                 .map_err(|csv_err| csv_err.into())
                 .and_then(|raw_record| Self::str_rec_from_cp1251(&raw_record))
                 .and_then(|str_record| Self::parse_record(&str_record))
-                .map_err(|error| {
-                    error.context(format!("Line {}", self.line_n)).into()
-                })
+                .map_err(|error| error.context(format!("Line {}", self.line_n)).into())
         })
     }
 }
@@ -273,8 +266,8 @@ mod tests {
 
         let reader = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\
+             ",
         ).unwrap();
         assert_eq!(
             *reader.get_timestamp(),
@@ -283,9 +276,9 @@ mod tests {
 
         let reader = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;;;2017-01-02\n\
+             ",
         ).unwrap();
         assert_eq!(
             *reader.get_timestamp(),
@@ -301,16 +294,16 @@ mod tests {
         // No ':'.
         let reader = from_str(
             "\
-            test\
-            ",
+             test\
+             ",
         );
         assert!(reader.is_err());
 
         // Invalid date/time format.
         let reader = from_str(
             "\
-            Updated: 2017-11-29 12:34:56\
-            ",
+             Updated: 2017-11-29 12:34:56\
+             ",
         );
         assert!(reader.is_err());
     }
@@ -319,8 +312,8 @@ mod tests {
     fn parse_no_records() {
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ",
         ).unwrap()
             .records()
             .next();
@@ -331,9 +324,9 @@ mod tests {
     fn parse_valid_record() {
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;;;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -349,9 +342,9 @@ mod tests {
 
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;org string;id string;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;org string;id string;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -367,9 +360,9 @@ mod tests {
 
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;\"org string\";id string;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;\"org string\";id string;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -385,9 +378,9 @@ mod tests {
 
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;\"org;string\";id string;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;\"org;string\";id string;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -403,9 +396,9 @@ mod tests {
 
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            1.2.3.4;example.com;http://example.com;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             1.2.3.4;example.com;http://example.com;;;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -426,9 +419,9 @@ mod tests {
 
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            1.2.3.4|1.2.3.0/24;example.com|*.example.com;http://example.com?test=x|y;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             1.2.3.4|1.2.3.0/24;example.com|*.example.com;http://example.com?test=x|y;;;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -451,10 +444,10 @@ mod tests {
 
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            1.2.3.4 | 1.2.3.0/24;example.com | \
-                *.example.com;http://example.com?test=x | http://example.com?test=y;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             1.2.3.4 | 1.2.3.0/24;example.com | \
+             *.example.com;http://example.com?test=x | http://example.com?test=y;;;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -482,9 +475,9 @@ mod tests {
         // Too many columns.
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;;;;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -494,9 +487,9 @@ mod tests {
         // Not enough columns.
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -506,9 +499,9 @@ mod tests {
         // No date.
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;;;\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;;;\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -518,9 +511,9 @@ mod tests {
         // Invalid date format.
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;;;;test\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;;;;test\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -530,9 +523,9 @@ mod tests {
         // Invalid IPv4 address.
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            invalid;;;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             invalid;;;;;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()
@@ -542,9 +535,9 @@ mod tests {
         // Invalid URL.
         let record = from_str(
             "\
-            Updated: 2017-11-29 12:34:56 -0100\n\
-            ;;invalid;;;2017-01-02\n\
-            ",
+             Updated: 2017-11-29 12:34:56 -0100\n\
+             ;;invalid;;;2017-01-02\n\
+             ",
         ).unwrap()
             .records()
             .next()

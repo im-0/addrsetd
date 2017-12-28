@@ -1,6 +1,5 @@
 #![forbid(unsafe_code)]
 #![warn(unused_results)]
-
 #![cfg_attr(feature = "cargo-clippy", warn(filter_map))]
 #![cfg_attr(feature = "cargo-clippy", warn(if_not_else))]
 #![cfg_attr(feature = "cargo-clippy", warn(mut_mut))]
@@ -17,9 +16,9 @@ extern crate failure;
 extern crate futures;
 extern crate isatty;
 
+extern crate log4rs;
 #[macro_use]
 extern crate log;
-extern crate log4rs;
 extern crate log_panics;
 
 extern crate structopt;
@@ -48,13 +47,12 @@ fn init_basic_logger() -> Result<log4rs::Handle, failure::Error> {
     );
 
     let config = log4rs::config::Config::builder()
-        .appender(log4rs::config::Appender::builder().build(
-            "appender",
-            appender,
-        ))
-        .build(log4rs::config::Root::builder().appender("appender").build(
-            log::LevelFilter::Trace,
-        ))?;
+        .appender(log4rs::config::Appender::builder().build("appender", appender))
+        .build(
+            log4rs::config::Root::builder()
+                .appender("appender")
+                .build(log::LevelFilter::Trace),
+        )?;
 
     log4rs::init_config(config).map_err(|error| error.into())
 }
