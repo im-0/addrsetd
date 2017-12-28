@@ -53,7 +53,7 @@ fn init_basic_logger() -> Result<log4rs::Handle, failure::Error> {
             appender,
         ))
         .build(log4rs::config::Root::builder().appender("appender").build(
-            log::LogLevelFilter::Trace,
+            log::LevelFilter::Trace,
         ))?;
 
     log4rs::init_config(config).map_err(|error| error.into())
